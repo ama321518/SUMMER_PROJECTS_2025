@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Water Outage Tracker</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<script>
+  function parseDT(dateStr, timeStr) {
+    const [dd, mm, yyyy] = dateStr.split("/").map(Number);
+    const [HH, MM, SS = 0] = timeStr.split(":").map(Number);
+    return new Date(yyyy, mm - 1, dd, HH, MM, SS);
+  }
+
+  const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQXwxLg1xqSAf85ki99Kke_e3pZPYfVSP2X8Y-v7Od8YesjrmSbyZAqudwYm3D0kP0tS6BclfAbdzOu/pub?output=csv";
+
+  fetch(csvUrl)
+    .then(response => response.text())
+    .then(text => {
+      const lines = text.trim().split("\n");
+      const body = lines.slice(1);
+      const items = [];
+      body.forEach(line => {
+        if (!line.trim()) return;
+        const cols = line.split(",");
+        const city = cols[2];
+        const date = cols[3];
+        const time = cols[4];
+        items.push({ city, date, time, dt: parseDT(date, time) });
+      });
+
+      // Sort newest → oldest
+      items.sort((a, b) => b.dt - a.dt);
+
+      // Build HTML
+      let html = "";
+      items.forEach(it => {
+        html += `<p>📍 ${it.city} — ${it.date} at ${it.time}</p>`;
+      });
+      document.getElementById("reports").innerHTML = html;
+    });
+</script>
+
+<body>
+  <h1>Water Outage Tracker</h1>
+  <div id="reports">
+    <!-- Reports will show up here -->
+  </div>
+</body>
+
+</html>
